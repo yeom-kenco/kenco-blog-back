@@ -34,7 +34,14 @@ router.post("/login", async (req, res) => {
       expiresIn: "1d",
     });
 
-    res.status(200).json({ message: "로그인 성공", token });
+    res
+      .cookie("token", token, {
+        httpOnly: true, // JavaScript에서 접근 불가. XSS 방지용. 프론트에서는 JS로 이 쿠키를 못 읽음
+        secure: false, // HTTPS일 경우 true (배포 시만 true)
+        sameSite: "lax", // CSRF 대응 (필요 시 "strict" 또는 "none")
+      })
+      .status(200)
+      .json({ message: "로그인 성공" });
   } catch (err) {
     res.status(500).json({ message: "로그인 실패", error: err.message });
   }
