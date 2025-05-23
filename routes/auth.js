@@ -3,8 +3,6 @@ import User from "./../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-console.log("✅ auth.js 라우터 불러옴");
-
 const router = express.Router();
 
 // 회원가입
