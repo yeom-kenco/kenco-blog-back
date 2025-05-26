@@ -94,4 +94,33 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
+// 좋아요 토글
+router.post("/:id/like", verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.userId;
+
+  try {
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "게시글 없음" });
+
+    const liked = post.likes.includes(userId);
+
+    if (liked) {
+      // 좋아요 취소
+      post.likes = post.likes.filter((uid) => uid.toString() !== userId);
+    } else {
+      // 좋아요 추가
+      post.likes.push(userId);
+    }
+
+    await post.save();
+    res.status(200).json({
+      message: liked ? "좋아요 취소됨" : "좋아요 추가됨",
+      likesCount: post.likes.length,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "좋아요 실패", error: err.message });
+  }
+});
+
 export default router;
