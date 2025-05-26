@@ -14,7 +14,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // 나중에 프론트 포트
+    origin: "http://localhost:5173", // 나중에 프론트 포트
     credentials: true,
   })
 );
