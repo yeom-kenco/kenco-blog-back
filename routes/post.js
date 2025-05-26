@@ -55,4 +55,43 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// 글 수정
+router.put("/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "게시글 없음" });
+
+    if (post.author.toString() !== req.userId)
+      return res.status(403).json({ message: "권한 없음" });
+
+    post.title = req.body.title || post.title;
+    post.content = req.body.content || post.content;
+
+    const updatedPost = await post.save();
+    res.status(200).json({ message: "수정 완료", post: updatedPost });
+  } catch (err) {
+    res.status(500).json({ message: "수정 실패", error: err.message });
+  }
+});
+
+// 글 삭제
+router.delete("/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "게시글 없음" });
+
+    if (post.author.toString() !== req.userId)
+      return res.status(403).json({ message: "권한 없음" });
+
+    await Post.findByIdAndDelete(id);
+    res.status(200).json({ message: "삭제 완료" });
+  } catch (err) {
+    res.status(500).json({ message: "삭제 실패", error: err.message });
+  }
+});
+
 export default router;
