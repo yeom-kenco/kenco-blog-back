@@ -39,9 +39,31 @@ router.post("/login", async (req, res) => {
         sameSite: "lax", // CSRF 대응 (필요 시 "strict" 또는 "none")
       })
       .status(200)
-      .json({ message: "로그인 성공" });
+      .json({
+        message: "로그인 성공",
+        user: {
+          _id: user._id,
+          email: user.email,
+          username: user.username,
+        },
+      });
   } catch (err) {
     res.status(500).json({ message: "로그인 실패", error: err.message });
+  }
+});
+
+router.get("/check", async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ message: "토큰 없음" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("_id email username");
+    if (!user) return res.status(404).json({ message: "사용자 없음" });
+
+    res.status(200).json({ user });
+  } catch (err) {
+    res.status(401).json({ message: "토큰 만료 또는 유효하지 않음" });
   }
 });
 
