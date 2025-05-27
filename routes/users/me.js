@@ -23,4 +23,26 @@ router.get("/comments", verifyToken, async (req, res) => {
   res.json(comments);
 });
 
+router.patch("/", verifyToken, async (req, res) => {
+  const { username } = req.body;
+  try {
+    const updated = await User.findByIdAndUpdate(
+      req.userId,
+      { username },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "수정 완료",
+      user: {
+        _id: updated._id,
+        username: updated.username,
+        email: updated.email,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "수정 실패", error: err.message });
+  }
+});
+
 export default router;
