@@ -52,6 +52,11 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// 로그아웃
+router.post("/logout", (req, res) => {
+  res.clearCookie("token").status(200).json({ message: "로그아웃 성공" });
+});
+
 router.get("/check", async (req, res) => {
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "토큰 없음" });
