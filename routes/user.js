@@ -4,6 +4,7 @@ import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -78,5 +79,23 @@ router.delete("/my/delete", verifyToken, async (req, res) => {
     res.status(500).json({ message: "회원 탈퇴 실패", error: err.message });
   }
 });
+
+router.patch(
+  "/profile-img",
+  verifyToken,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const user = await User.findByIdAndUpdate(
+        req.userId,
+        { profileImg: `/uploads/${req.file.filename}` },
+        { new: true }
+      );
+      res.status(200).json({ message: "업로드 성공", user });
+    } catch (err) {
+      res.status(500).json({ message: "업로드 실패", error: err.message });
+    }
+  }
+);
 
 export default router;

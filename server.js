@@ -9,6 +9,9 @@ import commentRoutes from "./routes/comment.js";
 import userRoutes from "./routes/user.js";
 import userMeRoutes from "./routes/users/me.js";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 const app = express();
@@ -27,6 +30,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/users/me", userMeRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.send("백엔드 서버 정상 작동 중입니다!");
