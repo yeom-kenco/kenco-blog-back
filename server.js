@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import postRoutes from "./routes/post.js";
 import commentRoutes from "./routes/comment.js";
 import userRoutes from "./routes/user.js";
+import userMeRoutes from "./routes/users/me.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -14,7 +15,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // 나중에 프론트 포트
+    origin: "http://localhost:5173", // 프론트 포트
     credentials: true,
   })
 );
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/users/me", userMeRoutes);
 
 app.get("/", (req, res) => {
   res.send("백엔드 서버 정상 작동 중입니다!");
