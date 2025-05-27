@@ -1,18 +1,23 @@
 import express from "express";
 import Post from "../models/Post.js";
 import { verifyToken } from "../middleware/auth.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 글쓰기 API
+// 글쓰기
 router.post("/", verifyToken, async (req, res) => {
   const { title, content } = req.body;
 
   try {
     const newPost = new Post({
       title,
-      content, // HTML string 그대로 저장
-      author: req.userId, // 인증된 사용자
+      content,
+      author: req.userId,
     });
 
     await newPost.save();
@@ -22,11 +27,11 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-// 글 목록 조회 (최신순, 10개만)
+// 글 목록 조회 (최신순, 10개)
 router.get("/", async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("author", "username") // 작성자 이름 포함
+      .populate("author", "username")
       .sort({ createdAt: -1 })
       .limit(10);
 
@@ -44,10 +49,8 @@ router.get("/:id", async (req, res) => {
 
   try {
     const post = await Post.findById(id).populate("author", "username");
-
-    if (!post) {
+    if (!post)
       return res.status(404).json({ message: "게시글을 찾을 수 없습니다." });
-    }
 
     res.status(200).json(post);
   } catch (err) {
@@ -62,7 +65,6 @@ router.put("/:id", verifyToken, async (req, res) => {
   try {
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: "게시글 없음" });
-
     if (post.author.toString() !== req.userId)
       return res.status(403).json({ message: "권한 없음" });
 
@@ -76,19 +78,35 @@ router.put("/:id", verifyToken, async (req, res) => {
   }
 });
 
-// 글 삭제
+// 글 삭제 + 이미지 파일 삭제
 router.delete("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: "게시글 없음" });
-
     if (post.author.toString() !== req.userId)
       return res.status(403).json({ message: "권한 없음" });
 
+    // 📌 content 안에서 이미지 경로 추출
+    const regex = /\/uploads\/[^\s"']+/g;
+    const matches = post.content.match(regex);
+
+    if (matches) {
+      matches.forEach((relativeUrl) => {
+        const filePath = path.join(__dirname, "..", relativeUrl);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.warn("❗ 이미지 삭제 실패:", filePath, err.message);
+          } else {
+            console.log("✅ 이미지 삭제:", filePath);
+          }
+        });
+      });
+    }
+
     await Post.findByIdAndDelete(id);
-    res.status(200).json({ message: "삭제 완료" });
+    res.status(200).json({ message: "게시글 및 이미지 삭제 완료" });
   } catch (err) {
     res.status(500).json({ message: "삭제 실패", error: err.message });
   }

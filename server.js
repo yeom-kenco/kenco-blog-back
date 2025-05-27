@@ -8,10 +8,13 @@ import postRoutes from "./routes/post.js";
 import commentRoutes from "./routes/comment.js";
 import userRoutes from "./routes/user.js";
 import userMeRoutes from "./routes/users/me.js";
+import uploadRoutes from "./routes/uploads.js";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const app = express();
@@ -30,6 +33,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/users/me", userMeRoutes);
+app.use("/api/uploads", uploadRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
