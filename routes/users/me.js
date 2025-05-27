@@ -1,4 +1,5 @@
 import express from "express";
+import bcrypt from "bcryptjs";
 import { verifyToken } from "../../middleware/auth.js";
 import Post from "../../models/Post.js";
 import User from "../../models/User.js";
@@ -59,6 +60,26 @@ router.delete("/", verifyToken, async (req, res) => {
     res.clearCookie("token").status(200).json({ message: "회원 탈퇴 완료" });
   } catch (err) {
     res.status(500).json({ message: "회원 탈퇴 실패", error: err.message });
+  }
+});
+
+router.patch("/password", verifyToken, async (req, res) => {
+  const { currentPw, newPw } = req.body;
+  try {
+    const user = await User.findById(req.userId);
+    const isMatch = await bcrypt.compare(currentPw, user.password);
+    if (!isMatch)
+      return res
+        .status(401)
+        .json({ message: "현재 비밀번호가 일치하지 않습니다." });
+
+    const hashed = await bcrypt.hash(newPw, 10);
+    user.password = hashed;
+    await user.save();
+
+    res.status(200).json({ message: "비밀번호 변경 완료" });
+  } catch (err) {
+    res.status(500).json({ message: "비밀번호 변경 실패", error: err.message });
   }
 });
 
