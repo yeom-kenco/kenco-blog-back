@@ -4,6 +4,7 @@ import { verifyToken } from "../middleware/auth.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import Comment from "../models/Comment.js";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -27,16 +28,40 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-// 글 목록 조회 (최신순, 10개)
+// 글 목록 조회 (페이지네이션)
 router.get("/", async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 6;
+  const skip = (page - 1) * limit;
+
   try {
+    const totalCount = await Post.countDocuments();
     const posts = await Post.find()
       .populate("author", "username")
       .sort({ createdAt: -1 })
-      .limit(10);
+      .skip(skip)
+      .limit(limit)
+      .lean(); // plain JS object로 반환
 
-    res.status(200).json(posts);
+    // ✅ 댓글 수 계산하여 붙이기
+    const postsWithCommentCounts = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          const commentCount = await Comment.countDocuments({ post: post._id });
+          return { ...post, commentCount };
+        } catch (err) {
+          console.error("❗댓글 수 조회 실패:", err.message);
+          return { ...post, commentCount: 0 }; // 실패해도 기본값으로 fallback
+        }
+      })
+    );
+
+    res.status(200).json({
+      posts: postsWithCommentCounts,
+      totalPages: Math.ceil(totalCount / limit),
+    });
   } catch (err) {
+    console.error("❗ posts GET error:", err);
     res
       .status(500)
       .json({ message: "글 목록 불러오기 실패", error: err.message });
