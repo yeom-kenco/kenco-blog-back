@@ -23,10 +23,16 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "유저 없음" });
+
+    if (!user) {
+      return res.status(400).json({ message: "유저 없음" }); // ✅ 방어 코드
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "비밀번호 불일치" });
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "비밀번호 불일치" });
+    }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
@@ -34,9 +40,9 @@ router.post("/login", async (req, res) => {
 
     res
       .cookie("token", token, {
-        httpOnly: true, // JavaScript에서 접근 불가. XSS 방지용. 프론트에서는 JS로 이 쿠키를 못 읽음
-        secure: true, // HTTPS일 경우 true (배포 시만 true)
-        sameSite: "None", // CSRF 대응 (필요 시 "strict" 또는 "none")
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
       })
       .status(200)
       .json({
@@ -48,6 +54,7 @@ router.post("/login", async (req, res) => {
         },
       });
   } catch (err) {
+    console.error("❗로그인 실패:", err); // ← 콘솔에 에러 꼭 찍어보자!
     res.status(500).json({ message: "로그인 실패", error: err.message });
   }
 });
