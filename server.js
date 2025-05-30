@@ -41,7 +41,7 @@ app.get("/", (req, res) => {
 });
 
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("✅ MongoDB 연결 성공");
     app.listen(process.env.PORT, () => {
