@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true, // JavaScript에서 접근 불가. XSS 방지용. 프론트에서는 JS로 이 쿠키를 못 읽음
-        secure: false, // HTTPS일 경우 true (배포 시만 true)
+        secure: true, // HTTPS일 경우 true (배포 시만 true)
         sameSite: "None", // CSRF 대응 (필요 시 "strict" 또는 "none")
       })
       .status(200)
