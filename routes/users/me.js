@@ -19,10 +19,15 @@ router.get("/liked", verifyToken, async (req, res) => {
 });
 
 router.get("/comments", verifyToken, async (req, res) => {
-  const comments = await Comment.find({ author: req.userId })
-    .populate("post", "title")
-    .sort({ createdAt: -1 });
-  res.json(comments);
+  try {
+    const comments = await Comment.find({ author: req.userId })
+      .populate("post", "title createdAt") // ✅ 여기 추가
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(comments);
+  } catch (err) {
+    res.status(500).json({ message: "내 댓글 조회 실패", error: err.message });
+  }
 });
 
 router.patch("/", verifyToken, async (req, res) => {
